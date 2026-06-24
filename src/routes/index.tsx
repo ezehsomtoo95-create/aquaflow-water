@@ -114,78 +114,11 @@ function Index() {
         </div>
 
         <div className="space-y-6">
-          {menu.map((item) => {
-            const qty = items[item.id] ?? 0;
-            const atMax = qty >= MAX_QTY;
-            return (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-3xl bg-card"
-                style={{ boxShadow: "var(--shadow-card)" }}
-              >
-                <div className="aspect-[5/4] w-full overflow-hidden bg-muted">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    width={1024}
-                    height={820}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                </div>
-                <div className="px-6 py-6">
-                  <h3 className="text-lg font-medium tracking-tight">
-                    {item.name}
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {item.description}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <p className="text-base font-semibold text-primary">
-                      KES {item.price.toLocaleString()}
-                    </p>
-                    {qty === 0 ? (
-                      <button
-                        onClick={() => handleAdd(item.id)}
-                        className="rounded-full px-5 py-2.5 text-sm font-medium text-primary-foreground transition active:scale-95"
-                        style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-soft)" }}
-                      >
-                        Add to cart
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2 rounded-full bg-secondary px-1.5 py-1.5">
-                        <button
-                          onClick={() => remove(item.id)}
-                          className="grid h-8 w-8 place-items-center rounded-full bg-card text-foreground transition active:scale-90"
-                          aria-label="Decrease"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="min-w-[1.5rem] text-center text-sm font-semibold tabular-nums">
-                          {qty}
-                        </span>
-                        <button
-                          onClick={() => handleAdd(item.id)}
-                          disabled={atMax}
-                          className="grid h-8 w-8 place-items-center rounded-full text-primary-foreground transition active:scale-90 disabled:opacity-40"
-                          style={{ background: "var(--gradient-primary)" }}
-                          aria-label="Increase"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {atMax && (
-                    <p className="mt-2 text-right text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Max reached
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+          {menu.map((item) => (
+            <ProductCard key={item.id} item={item} />
+          ))}
         </div>
+
 
         {/* About */}
         <section className="mt-16">
