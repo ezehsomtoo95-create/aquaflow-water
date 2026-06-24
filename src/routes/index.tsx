@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { menu } from "@/lib/menu";
 import { useCart } from "@/lib/cart-store";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
@@ -17,15 +17,11 @@ export const Route = createFileRoute("/")({
 });
 
 const WHATSAPP_NUMBER = "254799341904";
+const MAX_QTY = 5;
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
       <path d="M20.52 3.48A11.86 11.86 0 0 0 12.04 0C5.5 0 .2 5.3.2 11.84c0 2.09.55 4.13 1.6 5.93L0 24l6.38-1.67a11.83 11.83 0 0 0 5.66 1.44h.01c6.54 0 11.84-5.3 11.84-11.84 0-3.16-1.23-6.13-3.37-8.45ZM12.05 21.5h-.01a9.65 9.65 0 0 1-4.92-1.35l-.35-.21-3.79.99 1.01-3.69-.23-.38a9.66 9.66 0 0 1-1.48-5.12c0-5.34 4.35-9.68 9.69-9.68 2.59 0 5.02 1.01 6.85 2.84a9.62 9.62 0 0 1 2.84 6.85c0 5.34-4.35 9.75-9.61 9.75Zm5.31-7.27c-.29-.15-1.72-.85-1.99-.94-.27-.1-.46-.15-.66.15-.19.29-.76.94-.93 1.14-.17.19-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.44-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.59.13-.13.29-.34.43-.51.15-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.15-.66-1.6-.91-2.19-.24-.57-.48-.49-.66-.5l-.56-.01c-.19 0-.51.07-.78.36-.27.29-1.02 1-1.02 2.44 0 1.44 1.05 2.83 1.19 3.02.15.19 2.06 3.15 5 4.42.7.3 1.25.48 1.67.62.7.22 1.34.19 1.85.12.56-.08 1.72-.7 1.96-1.38.24-.68.24-1.26.17-1.38-.07-.12-.27-.19-.56-.34Z" />
     </svg>
   );
@@ -49,162 +45,204 @@ function Index() {
 
   const [open, setOpen] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Sticky checkout at the top */}
-      {totalCount > 0 && (
-        <div className="sticky top-0 z-40 px-4 pt-3 pb-3 backdrop-blur-md"
-          style={{ background: "color-mix(in oklab, var(--background) 80%, transparent)" }}
-        >
-          <div className="mx-auto max-w-xl">
-            <button
-              onClick={() => setOpen(true)}
-              className="flex w-full items-center justify-between gap-4 rounded-full bg-primary px-5 py-3.5 text-primary-foreground transition active:scale-[0.99]"
-              style={{ boxShadow: "var(--shadow-soft)" }}
-            >
-              <span className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/15">
-                  <ShoppingBag className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-medium">
-                  {totalCount} {totalCount === 1 ? "item" : "items"}
-                </span>
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-sm font-semibold">
-                  KES {totalPrice.toLocaleString()}
-                </span>
-                <span className="text-xs opacity-80">Checkout →</span>
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
+  // Animate cart when items added
+  const [pop, setPop] = useState(0);
+  const prevCount = useRef(totalCount);
+  useEffect(() => {
+    if (totalCount > prevCount.current) setPop((p) => p + 1);
+    prevCount.current = totalCount;
+  }, [totalCount]);
 
-      <div
-        className="px-5 pt-12 pb-8 sm:pt-16"
+  const handleAdd = (id: string) => {
+    const qty = items[id] ?? 0;
+    if (qty >= MAX_QTY) return;
+    add(id);
+  };
+
+  return (
+    <div className="relative min-h-screen bg-background text-foreground">
+      {/* Floating cart — top right */}
+      <button
+        onClick={() => totalCount > 0 && setOpen(true)}
+        aria-label={`Open cart, ${totalCount} items`}
+        className="fixed right-4 top-4 z-40 sm:right-6 sm:top-6"
+      >
+        <span
+          key={pop}
+          className={`relative grid h-12 w-12 place-items-center rounded-full text-primary-foreground ${pop ? "animate-cart-pop" : ""}`}
+          style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-float)" }}
+        >
+          <ShoppingBag className="h-5 w-5" />
+          {totalCount > 0 && (
+            <span
+              key={`b-${pop}`}
+              className="animate-badge-pop absolute -right-1 -top-1 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-foreground px-1 text-[10px] font-semibold text-background"
+            >
+              {totalCount}
+            </span>
+          )}
+        </span>
+      </button>
+
+      {/* Hero */}
+      <header
+        className="px-5 pt-14 pb-10 sm:pt-20"
         style={{ background: "var(--gradient-soft)" }}
       >
         <div className="mx-auto max-w-xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            RUIRU· PREMIUM DELIVERY
+          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+            RUIRU · PREMIUM DELIVERY
           </p>
-          <h1 className="mt-3 text-4xl font-light tracking-tight sm:text-5xl">
+          <h1 className="mt-4 text-5xl font-light leading-[1.05] tracking-tight sm:text-6xl">
             Aqua<span className="font-serif italic text-primary">Flow</span>
           </h1>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Soft, pure, perfectly chilled water — delivered with care to your
-            doorstep.
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            Soft, pure, perfectly chilled water — delivered with quiet care
+            to your doorstep.
           </p>
         </div>
-      </div>
+      </header>
 
-      <main className="mx-auto max-w-xl px-5 pb-16 pt-6">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-muted-foreground">
-          Our Selection
-        </h2>
-        <div className="space-y-5">
+      <main className="mx-auto max-w-xl px-5 pb-32 pt-8">
+        <div className="mb-5 flex items-baseline justify-between">
+          <h2 className="text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
+            Our Selection
+          </h2>
+          <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+            Max {MAX_QTY} per item
+          </span>
+        </div>
+
+        <div className="space-y-6">
           {menu.map((item) => {
             const qty = items[item.id] ?? 0;
+            const atMax = qty >= MAX_QTY;
             return (
               <article
                 key={item.id}
                 className="overflow-hidden rounded-3xl bg-card"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
-                <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
+                <div className="aspect-[5/4] w-full overflow-hidden bg-muted">
                   <img
                     src={item.imageUrl}
                     alt={item.name}
                     width={1024}
-                    height={768}
+                    height={820}
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                   />
                 </div>
-                <div className="px-5 py-5">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-base font-medium">
-                      {item.name}
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {item.description}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-primary">
+                <div className="px-6 py-6">
+                  <h3 className="text-lg font-medium tracking-tight">
+                    {item.name}
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {item.description}
+                  </p>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <p className="text-base font-semibold text-primary">
                       KES {item.price.toLocaleString()}
                     </p>
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 rounded-full bg-secondary px-2 py-1.5">
+                    {qty === 0 ? (
                       <button
-                        onClick={() => remove(item.id)}
-                        disabled={qty === 0}
-                        className="grid h-8 w-8 place-items-center rounded-full bg-card text-foreground disabled:opacity-40"
-                        aria-label="Decrease quantity"
+                        onClick={() => handleAdd(item.id)}
+                        className="rounded-full px-5 py-2.5 text-sm font-medium text-primary-foreground transition active:scale-95"
+                        style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-soft)" }}
                       >
-                        <Minus className="h-4 w-4" />
+                        Add to cart
                       </button>
-                      <span className="min-w-[1.5rem] text-center text-sm font-semibold tabular-nums">
-                        {qty}
-                      </span>
-                      <button
-                        onClick={() => add(item.id)}
-                        className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground"
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => add(item.id)}
-                      className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                      style={{ boxShadow: "var(--shadow-soft)" }}
-                    >
-                      Add
-                    </button>
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-full bg-secondary px-1.5 py-1.5">
+                        <button
+                          onClick={() => remove(item.id)}
+                          className="grid h-8 w-8 place-items-center rounded-full bg-card text-foreground transition active:scale-90"
+                          aria-label="Decrease"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="min-w-[1.5rem] text-center text-sm font-semibold tabular-nums">
+                          {qty}
+                        </span>
+                        <button
+                          onClick={() => handleAdd(item.id)}
+                          disabled={atMax}
+                          className="grid h-8 w-8 place-items-center rounded-full text-primary-foreground transition active:scale-90 disabled:opacity-40"
+                          style={{ background: "var(--gradient-primary)" }}
+                          aria-label="Increase"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
+                  {atMax && (
+                    <p className="mt-2 text-right text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Max reached
+                    </p>
+                  )}
                 </div>
               </article>
             );
           })}
         </div>
 
-        {/* About Us */}
-        <section className="mt-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+        {/* About */}
+        <section className="mt-16">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             About Us
           </p>
-          <h2 className="mt-2 text-2xl font-light tracking-tight sm:text-3xl">
-            Hydration, with a softer touch.
+          <h2 className="mt-3 text-3xl font-light tracking-tight sm:text-4xl">
+            Hydration, with a <span className="font-serif italic text-primary">softer</span> touch.
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             AquaFlow is a small, family-run delivery service based in Ruiru.
-            We hand-pick every jug, sanitize each bottle, and bring it to your
-            door — so your home, office or studio always feels calm, clean and
-            beautifully hydrated.
+            We hand-pick every jug, sanitize every bottle, and bring it to
+            your door — so your home, office, or studio always feels calm,
+            clean, and beautifully hydrated.
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Same-day delivery · Friendly riders · Confirmed on WhatsApp.
-          </p>
-
-          <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:opacity-90"
-            style={{ boxShadow: "var(--shadow-soft)" }}
-            aria-label="Chat with us on WhatsApp"
-          >
-            <WhatsAppIcon className="h-4 w-4 text-primary" />
-            Chat with us
-          </a>
+          <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+            {[
+              { k: "Same-day", v: "Delivery" },
+              { k: "Sanitized", v: "Every bottle" },
+              { k: "Friendly", v: "Riders" },
+            ].map((s) => (
+              <div
+                key={s.k}
+                className="rounded-2xl bg-card px-3 py-4"
+                style={{ boxShadow: "var(--shadow-card)" }}
+              >
+                <p className="text-sm font-medium">{s.k}</p>
+                <p className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {s.v}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
 
-        <p className="mt-10 text-center text-xs text-muted-foreground">
-          Free delivery within Ruiru · Order confirmed via WhatsApp
+        <p className="mt-12 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          Confirmed via WhatsApp · Made in Ruiru
         </p>
       </main>
+
+      {/* Floating WhatsApp — bottom right, always visible */}
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat with us on WhatsApp"
+        className="fixed bottom-5 right-4 z-40 flex items-center gap-2 rounded-full bg-card py-3 pl-3 pr-4 text-sm font-medium text-foreground transition hover:scale-[1.03] active:scale-95 sm:bottom-6 sm:right-6"
+        style={{ boxShadow: "var(--shadow-float)" }}
+      >
+        <span
+          className="grid h-9 w-9 place-items-center rounded-full text-primary-foreground"
+          style={{ background: "linear-gradient(135deg, #25D366, #128C7E)" }}
+        >
+          <WhatsAppIcon className="h-5 w-5" />
+        </span>
+        <span className="pr-1">Chat with us</span>
+      </a>
 
       {open && <CheckoutModal onClose={() => setOpen(false)} />}
     </div>
@@ -261,11 +299,11 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/30 px-3 pb-3 backdrop-blur-sm sm:items-center sm:p-4">
       <div
         className="w-full max-w-md rounded-3xl bg-card p-6"
-        style={{ boxShadow: "var(--shadow-soft)" }}
+        style={{ boxShadow: "var(--shadow-float)" }}
       >
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-medium">Almost there</h2>
+            <h2 className="text-xl font-medium">Your cart</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               We'll confirm your order via WhatsApp.
             </p>
@@ -286,10 +324,7 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
             </p>
           )}
           {lines.map((l) => (
-            <div
-              key={l.it.id}
-              className="flex items-center justify-between gap-3 text-sm"
-            >
+            <div key={l.it.id} className="flex items-center justify-between gap-2 text-sm">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{l.it.name}</p>
                 <p className="text-xs text-muted-foreground tabular-nums">
@@ -310,8 +345,10 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
                 </span>
                 <button
                   type="button"
-                  onClick={() => add(l.it.id)}
-                  className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground"
+                  onClick={() => l.qty < MAX_QTY && add(l.it.id)}
+                  disabled={l.qty >= MAX_QTY}
+                  className="grid h-7 w-7 place-items-center rounded-full text-primary-foreground disabled:opacity-40"
+                  style={{ background: "var(--gradient-primary)" }}
                   aria-label="Increase"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -330,16 +367,14 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
           {lines.length > 0 && (
             <div className="mt-2 flex items-center justify-between border-t border-border pt-3 text-sm font-semibold">
               <span>Total</span>
-              <span className="tabular-nums">
-                KES {total.toLocaleString()}
-              </span>
+              <span className="tabular-nums">KES {total.toLocaleString()}</span>
             </div>
           )}
         </div>
 
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
               Name
             </label>
             <input
@@ -351,7 +386,7 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
               Delivery Address
             </label>
             <textarea
@@ -366,8 +401,8 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={lines.length === 0}
-            className="mt-2 w-full rounded-full bg-primary py-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            style={{ boxShadow: "var(--shadow-soft)" }}
+            className="mt-2 w-full rounded-full py-4 text-sm font-semibold text-primary-foreground transition hover:opacity-95 disabled:opacity-50"
+            style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-soft)" }}
           >
             Send order on WhatsApp
           </button>
