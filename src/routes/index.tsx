@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { menu } from "@/lib/menu";
 import { useCart } from "@/lib/cart-store";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
@@ -29,18 +29,8 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 function Index() {
   const items = useCart((s) => s.items);
-  const add = useCart((s) => s.add);
-  const remove = useCart((s) => s.remove);
   const totalCount = useCart((s) =>
     Object.values(s.items).reduce((a, b) => a + b, 0),
-  );
-  const totalPrice = useMemo(
-    () =>
-      Object.entries(items).reduce((sum, [id, qty]) => {
-        const it = menu.find((m) => m.id === id);
-        return sum + (it ? it.price * qty : 0);
-      }, 0),
-    [items],
   );
 
   const [open, setOpen] = useState(false);
@@ -53,11 +43,9 @@ function Index() {
     prevCount.current = totalCount;
   }, [totalCount]);
 
-  const handleAdd = (id: string) => {
-    const qty = items[id] ?? 0;
-    if (qty >= MAX_QTY) return;
-    add(id);
-  };
+  // Keep `items` referenced for re-render in this scope (Modal reads it directly)
+  void items;
+
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -114,78 +102,11 @@ function Index() {
         </div>
 
         <div className="space-y-6">
-          {menu.map((item) => {
-            const qty = items[item.id] ?? 0;
-            const atMax = qty >= MAX_QTY;
-            return (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-3xl bg-card"
-                style={{ boxShadow: "var(--shadow-card)" }}
-              >
-                <div className="aspect-[5/4] w-full overflow-hidden bg-muted">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    width={1024}
-                    height={820}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                </div>
-                <div className="px-6 py-6">
-                  <h3 className="text-lg font-medium tracking-tight">
-                    {item.name}
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {item.description}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <p className="text-base font-semibold text-primary">
-                      KES {item.price.toLocaleString()}
-                    </p>
-                    {qty === 0 ? (
-                      <button
-                        onClick={() => handleAdd(item.id)}
-                        className="rounded-full px-5 py-2.5 text-sm font-medium text-primary-foreground transition active:scale-95"
-                        style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-soft)" }}
-                      >
-                        Add to cart
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2 rounded-full bg-secondary px-1.5 py-1.5">
-                        <button
-                          onClick={() => remove(item.id)}
-                          className="grid h-8 w-8 place-items-center rounded-full bg-card text-foreground transition active:scale-90"
-                          aria-label="Decrease"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="min-w-[1.5rem] text-center text-sm font-semibold tabular-nums">
-                          {qty}
-                        </span>
-                        <button
-                          onClick={() => handleAdd(item.id)}
-                          disabled={atMax}
-                          className="grid h-8 w-8 place-items-center rounded-full text-primary-foreground transition active:scale-90 disabled:opacity-40"
-                          style={{ background: "var(--gradient-primary)" }}
-                          aria-label="Increase"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {atMax && (
-                    <p className="mt-2 text-right text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Max reached
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+          {menu.map((item) => (
+            <ProductCard key={item.id} item={item} />
+          ))}
         </div>
+
 
         {/* About */}
         <section className="mt-16">
@@ -411,3 +332,108 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+function ProductCard({ item }: { item: (typeof menu)[number] }) {
+  const setQty = useCart((s) => s.setQty);
+  const items = useCart((s) => s.items);
+  const inCart = items[item.id] ?? 0;
+  const [pick, setPick] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  const dec = () => setPick((p) => Math.max(1, p - 1));
+  const inc = () => setPick((p) => Math.min(MAX_QTY, p + 1));
+
+  const onAdd = () => {
+    const next = Math.min(MAX_QTY, inCart + pick);
+    setQty(item.id, next);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1100);
+  };
+
+  const atMax = inCart >= MAX_QTY;
+
+  return (
+    <article
+      className="overflow-hidden rounded-3xl bg-card"
+      style={{ boxShadow: "var(--shadow-card)" }}
+    >
+      <div className="aspect-[5/4] w-full overflow-hidden bg-muted">
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          width={1024}
+          height={820}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+        />
+      </div>
+      <div className="px-6 py-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-medium tracking-tight">{item.name}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {item.description}
+            </p>
+          </div>
+          <p className="shrink-0 text-base font-semibold text-primary">
+            KES {item.price.toLocaleString()}
+          </p>
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-full bg-secondary px-1.5 py-1.5">
+            <button
+              type="button"
+              onClick={dec}
+              disabled={pick <= 1}
+              className="grid h-9 w-9 place-items-center rounded-full bg-card text-foreground transition active:scale-90 disabled:opacity-40"
+              aria-label="Decrease"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="min-w-[1.5rem] text-center text-sm font-semibold tabular-nums">
+              {pick}
+            </span>
+            <button
+              type="button"
+              onClick={inc}
+              disabled={pick >= MAX_QTY}
+              className="grid h-9 w-9 place-items-center rounded-full text-primary-foreground transition active:scale-90 disabled:opacity-40"
+              style={{ background: "var(--gradient-primary)" }}
+              aria-label="Increase"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={atMax}
+            className={`flex-1 rounded-full px-5 py-3 text-sm font-medium text-primary-foreground transition active:scale-[0.98] disabled:opacity-40 ${added ? "animate-cart-pop" : ""}`}
+            style={{
+              background: added
+                ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                : "var(--gradient-primary)",
+              boxShadow: "var(--shadow-soft)",
+            }}
+          >
+            {added ? "Added ✓" : atMax ? "Max in cart" : "Add to cart"}
+          </button>
+        </div>
+
+        {inCart > 0 && !atMax && (
+          <p className="mt-3 text-right text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            {inCart} in cart
+          </p>
+        )}
+        {atMax && (
+          <p className="mt-3 text-right text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Max {MAX_QTY} reached
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
