@@ -44,7 +44,7 @@ function Index() {
       >
         <div className="mx-auto max-w-xl">
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            Nairobi · Premium Delivery
+            RUIRU· PREMIUM DELIVERY
           </p>
           <h1 className="mt-3 text-4xl font-light tracking-tight sm:text-5xl">
             Aqua<span className="font-serif italic text-primary">Flow</span>
