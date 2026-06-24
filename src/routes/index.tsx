@@ -332,3 +332,108 @@ function CheckoutModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+function ProductCard({ item }: { item: (typeof menu)[number] }) {
+  const setQty = useCart((s) => s.setQty);
+  const items = useCart((s) => s.items);
+  const inCart = items[item.id] ?? 0;
+  const [pick, setPick] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  const dec = () => setPick((p) => Math.max(1, p - 1));
+  const inc = () => setPick((p) => Math.min(MAX_QTY, p + 1));
+
+  const onAdd = () => {
+    const next = Math.min(MAX_QTY, inCart + pick);
+    setQty(item.id, next);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1100);
+  };
+
+  const atMax = inCart >= MAX_QTY;
+
+  return (
+    <article
+      className="overflow-hidden rounded-3xl bg-card"
+      style={{ boxShadow: "var(--shadow-card)" }}
+    >
+      <div className="aspect-[5/4] w-full overflow-hidden bg-muted">
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          width={1024}
+          height={820}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+        />
+      </div>
+      <div className="px-6 py-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-medium tracking-tight">{item.name}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {item.description}
+            </p>
+          </div>
+          <p className="shrink-0 text-base font-semibold text-primary">
+            KES {item.price.toLocaleString()}
+          </p>
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-full bg-secondary px-1.5 py-1.5">
+            <button
+              type="button"
+              onClick={dec}
+              disabled={pick <= 1}
+              className="grid h-9 w-9 place-items-center rounded-full bg-card text-foreground transition active:scale-90 disabled:opacity-40"
+              aria-label="Decrease"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="min-w-[1.5rem] text-center text-sm font-semibold tabular-nums">
+              {pick}
+            </span>
+            <button
+              type="button"
+              onClick={inc}
+              disabled={pick >= MAX_QTY}
+              className="grid h-9 w-9 place-items-center rounded-full text-primary-foreground transition active:scale-90 disabled:opacity-40"
+              style={{ background: "var(--gradient-primary)" }}
+              aria-label="Increase"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={atMax}
+            className={`flex-1 rounded-full px-5 py-3 text-sm font-medium text-primary-foreground transition active:scale-[0.98] disabled:opacity-40 ${added ? "animate-cart-pop" : ""}`}
+            style={{
+              background: added
+                ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                : "var(--gradient-primary)",
+              boxShadow: "var(--shadow-soft)",
+            }}
+          >
+            {added ? "Added ✓" : atMax ? "Max in cart" : "Add to cart"}
+          </button>
+        </div>
+
+        {inCart > 0 && !atMax && (
+          <p className="mt-3 text-right text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            {inCart} in cart
+          </p>
+        )}
+        {atMax && (
+          <p className="mt-3 text-right text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Max {MAX_QTY} reached
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
