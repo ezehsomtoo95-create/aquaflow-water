@@ -29,18 +29,8 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 function Index() {
   const items = useCart((s) => s.items);
-  const add = useCart((s) => s.add);
-  const remove = useCart((s) => s.remove);
   const totalCount = useCart((s) =>
     Object.values(s.items).reduce((a, b) => a + b, 0),
-  );
-  const totalPrice = useMemo(
-    () =>
-      Object.entries(items).reduce((sum, [id, qty]) => {
-        const it = menu.find((m) => m.id === id);
-        return sum + (it ? it.price * qty : 0);
-      }, 0),
-    [items],
   );
 
   const [open, setOpen] = useState(false);
@@ -53,11 +43,9 @@ function Index() {
     prevCount.current = totalCount;
   }, [totalCount]);
 
-  const handleAdd = (id: string) => {
-    const qty = items[id] ?? 0;
-    if (qty >= MAX_QTY) return;
-    add(id);
-  };
+  // Keep `items` referenced for re-render in this scope (Modal reads it directly)
+  void items;
+
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
