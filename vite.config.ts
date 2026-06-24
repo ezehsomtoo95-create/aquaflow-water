@@ -1,8 +1,8 @@
-import { tanstackStart } from '@tanstack/react-start/plugin/vite';
-import { defineConfig } from 'vite';
-import viteReact from '@vitejs/plugin-react';
-import { nitro } from 'nitro/vite'; // Ensure this is installed
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  plugins: [tanstackStart(), nitro(), viteReact()],
+  tanstackStart: {
+    // Redirect TanStack Start's bundled server entry to src/server.ts
+    server: { entry: "server" },
+  },
 });
