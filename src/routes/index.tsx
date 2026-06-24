@@ -152,18 +152,16 @@ function Index() {
         href={`https://wa.me/${WHATSAPP_NUMBER}`}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Chat with us on WhatsApp"
-        className="fixed bottom-5 right-4 z-40 flex items-center gap-2 rounded-full bg-card py-3 pl-3 pr-4 text-sm font-medium text-foreground transition hover:scale-[1.03] active:scale-95 sm:bottom-6 sm:right-6"
-        style={{ boxShadow: "var(--shadow-float)" }}
+        aria-label="Chat on WhatsApp"
+        className="fixed bottom-5 right-4 z-40 grid h-12 w-12 place-items-center rounded-full text-primary-foreground transition hover:scale-105 active:scale-95 sm:bottom-6 sm:right-6"
+        style={{
+          background: "linear-gradient(135deg, oklch(0.7 0.12 215), oklch(0.55 0.15 240))",
+          boxShadow: "var(--shadow-float)",
+        }}
       >
-        <span
-          className="grid h-9 w-9 place-items-center rounded-full text-primary-foreground"
-          style={{ background: "linear-gradient(135deg, #25D366, #128C7E)" }}
-        >
-          <WhatsAppIcon className="h-5 w-5" />
-        </span>
-        <span className="pr-1">Chat with us</span>
+        <WhatsAppIcon className="h-5 w-5" />
       </a>
+
 
       {open && <CheckoutModal onClose={() => setOpen(false)} />}
     </div>
