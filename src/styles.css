@@ -120,8 +120,22 @@
   0% { transform: translateY(8px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
+@keyframes ripple {
+  0% { transform: scale(0.6); opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes water-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 .animate-cart-pop { animation: cart-pop 500ms cubic-bezier(.22,1.4,.36,1); }
 .animate-badge-pop { animation: badge-pop 320ms cubic-bezier(.22,1.4,.36,1); }
+.bg-water {
+  background: var(--gradient-water);
+  background-size: 200% 200%;
+  animation: water-shift 14s ease-in-out infinite;
+}
+
 
 
 .dark {
