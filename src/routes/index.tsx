@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { menu } from "@/lib/menu";
 import { useCart } from "@/lib/cart-store";
-import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { MapPin, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -140,6 +141,15 @@ function Index() {
               </div>
             ))}
           </div>
+
+          {/* Our Hub */}
+          <div className="mt-6 flex items-center gap-2 rounded-2xl bg-card px-4 py-3" style={{ boxShadow: "var(--shadow-card)" }}>
+            <MapPin className="h-4 w-4 text-primary" />
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Our Hub</p>
+              <p className="text-sm font-medium">Serving Ruiru and surrounding areas</p>
+            </div>
+          </div>
         </section>
 
         <p className="mt-12 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -164,6 +174,7 @@ function Index() {
 
 
       {open && <CheckoutModal onClose={() => setOpen(false)} />}
+      <ScrollToTopButton />
     </div>
   );
 }
@@ -411,7 +422,7 @@ function ProductCard({ item }: { item: (typeof menu)[number] }) {
             className={`flex-1 rounded-full px-5 py-3 text-sm font-medium text-primary-foreground transition active:scale-[0.98] disabled:opacity-40 ${added ? "animate-cart-pop" : ""}`}
             style={{
               background: added
-                ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                ? "linear-gradient(135deg, #3b82f6, #2563eb)"
                 : "var(--gradient-primary)",
               boxShadow: "var(--shadow-soft)",
             }}
